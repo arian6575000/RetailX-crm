@@ -46,6 +46,7 @@ export function resolveScheme(mode: ThemeMode, system: Scheme | null | undefined
 // ---- layout tokens ----
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, huge: 40 } as const;
 export const radius = { sm: 10, md: 14, lg: 20, xl: 28, pill: 999 } as const;
+export const MAX_CONTENT = 720; // dp, content column cap on tablets / landscape / web
 export const MIN_TOUCH = 44; // dp, accessibility minimum touch target
 export const iconSize = { sm: 16, md: 20, lg: 24, xl: 32 } as const;
 
