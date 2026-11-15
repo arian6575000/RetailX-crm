@@ -1,0 +1,35 @@
+{
+  "project": {
+    "name": "RetailX CRM",
+    "code": "retailx-crm",
+    "platform": "android_apk",
+    "icon": "people",
+    "description": "Advanced offline mobile CRM: customers, leads, pipeline, follow-ups, analytics, backup (Android).",
+    "current_version": "1.0.0",
+    "min_supported_version": "1.0.0"
+  },
+  "permission_schema": [
+    {
+      "module": "sales",
+      "label": "Sales",
+      "icon": "trending-up",
+      "description": "Leads, pipeline and analytics.",
+      "features": [
+        { "key": "pipeline.manage", "label": "Leads & Sales Pipeline", "description": "Lead list, pipeline board, convert lead to customer", "default": true },
+        { "key": "analytics.view", "label": "Analytics", "description": "Charts and performance reports", "default": true }
+      ]
+    },
+    {
+      "module": "data",
+      "label": "Data tools",
+      "icon": "swap-vertical",
+      "description": "Import, export, backup and attachments.",
+      "features": [
+        { "key": "data.importExport", "label": "Import / Export (CSV, contacts)", "description": "Bulk import customers and export CSV", "default": true },
+        { "key": "data.backup", "label": "Backup & Restore", "description": "Encrypted backup file and restore", "default": true },
+        { "key": "notes.attachments", "label": "Notes attachments", "description": "Attach files and photos to customers and notes", "default": true },
+        { "key": "print.reports", "label": "PDF reports", "description": "Customer profile PDF", "default": true }
+      ]
+    }
+  ]
+}

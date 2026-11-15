@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "RetailX CRM",
+    "slug": "retailx-crm",
+    "scheme": "retailxcrm",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#101321"
+    },
+    "android": {
+      "package": "com.retailx.crm",
+      "adaptiveIcon": {
+        "backgroundColor": "#4338CA",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "allowBackup": false,
+      "softwareKeyboardLayoutMode": "resize",
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-font",
+      ["expo-local-authentication", { "faceIDPermission": "Unlock RetailX CRM with Face ID" }],
+      ["expo-notifications", { "color": "#4338CA" }],
+      ["expo-image-picker", { "photosPermission": "Attach photos to customers and notes.", "cameraPermission": "Take photos to attach to customers and notes." }],
+      ["expo-contacts", { "contactsPermission": "Import customers from your phone contacts." }]
+    ],
+    "experiments": { "typedRoutes": false }
+  }
+}
