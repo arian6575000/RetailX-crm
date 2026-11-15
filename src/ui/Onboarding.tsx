@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Animated, Dimensions, FlatList, View } from 'react-native';
+import { Animated, FlatList, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../ctx/AppContext';
@@ -9,8 +9,6 @@ import { Logo } from './Logo';
 import { elevation, radius, space } from '../lib/theme';
 import { haptic } from '../lib/haptics';
 import { DEFAULT_SETTINGS } from '../db/types';
-
-const W = Dimensions.get('window').width;
 
 interface Page { key: string; icon: IconName; title: string; text: string; orbit: IconName[] }
 const PAGES: Page[] = [
@@ -46,6 +44,7 @@ function Illustration({ page }: { page: Page }) {
 }
 
 export function Onboarding() {
+  const W = useWindowDimensions().width;
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const { settings, saveSettings, toast } = useApp();
