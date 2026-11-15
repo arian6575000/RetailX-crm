@@ -1,6 +1,6 @@
 // Bottom sheet (drag-to-dismiss, keyboard aware) + contextual action menu.
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Easing, KeyboardAvoidingView, Modal, PanResponder, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, Easing, KeyboardAvoidingView, Modal, PanResponder, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../ctx/ThemeContext';
@@ -8,11 +8,10 @@ import { elevation, radius, space } from '../lib/theme';
 import { haptic } from '../lib/haptics';
 import { IconName, Pressy, T } from './kit';
 
-const H = Dimensions.get('window').height;
-
 export function Sheet({ visible, onClose, title, children, footer, tall }: { visible: boolean; onClose: () => void; title?: string; children: React.ReactNode; footer?: React.ReactNode; tall?: boolean }) {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
+  const H = useWindowDimensions().height;
   const y = useRef(new Animated.Value(H)).current;
   const [mounted, setMounted] = useState(visible);
   const close = useRef(onClose); close.current = onClose;
@@ -38,7 +37,7 @@ export function Sheet({ visible, onClose, title, children, footer, tall }: { vis
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: c.overlay, opacity: y.interpolate({ inputRange: [0, H], outputRange: [1, 0], extrapolate: 'clamp' }) }]}>
           <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityLabel="Close" accessibilityRole="button" />
         </Animated.View>
-        <Animated.View accessibilityViewIsModal style={[{ maxHeight: tall ? H * 0.94 : H * 0.88, backgroundColor: c.surfaceRaised, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, transform: [{ translateY: y }] }, elevation.high]}>
+        <Animated.View accessibilityViewIsModal style={[{ width: '100%', maxWidth: 640, alignSelf: 'center', maxHeight: tall ? H * 0.94 : H * 0.88, backgroundColor: c.surfaceRaised, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, transform: [{ translateY: y }] }, elevation.high]}>
           <View {...pan.panHandlers} style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 6 }}>
             <View style={{ width: 40, height: 5, borderRadius: 3, backgroundColor: c.borderStrong }} />
             {title ? <T v="heading" style={{ marginTop: space.md }} accessibilityRole="header">{title}</T> : null}
