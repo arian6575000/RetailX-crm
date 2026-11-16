@@ -2,7 +2,7 @@
 // Screens compose these; they never use raw colours, sizes or fonts.
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Animated, Easing, KeyboardAvoidingView, PanResponder, Platform, Pressable, ScrollView, StyleProp, StyleSheet, Text,
+  ActivityIndicator, Animated, Easing, KeyboardAvoidingView, PanResponder, Pressable, ScrollView, StyleProp, StyleSheet, Text,
   TextInput, TextInputProps, TextStyle, View, ViewStyle, RefreshControlProps,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +16,9 @@ import { Fmt } from '../lib/format';
 import { CREDIT } from '../lib/brand';
 
 export type IconName = React.ComponentProps<typeof Ionicons>['name'];
+
+/** Cards with pad={0} (list cards) set this so their <Row>s add their own horizontal padding. */
+const RowInsetContext = React.createContext(false);
 
 // ───────────────────────── Text ─────────────────────────
 export function T({ v = 'body', color, children, style, align, numberOfLines, ...rest }: {
@@ -62,8 +65,10 @@ export function Card({ children, style, onPress, onLongPress, pad = 'lg', raised
     backgroundColor: raised ? c.surfaceRaised : c.surface, borderRadius: radius.lg, padding: pad === 0 ? 0 : space[pad],
     borderWidth: StyleSheet.hairlineWidth * 2, borderColor: c.border, ...(isDark ? {} : elevation.low),
   };
-  if (onPress || onLongPress) return <Pressy onPress={onPress} onLongPress={onLongPress} scale={0.985} style={[base, style]}>{children}</Pressy>;
-  return <View style={[base, style]}>{children}</View>;
+  const inset = pad === 0;
+  const body = inset ? <RowInsetContext.Provider value>{children}</RowInsetContext.Provider> : children;
+  if (onPress || onLongPress) return <Pressy onPress={onPress} onLongPress={onLongPress} scale={0.985} style={[base, style]}>{body}</Pressy>;
+  return <View style={[base, style]}>{body}</View>;
 }
 
 /** Gradient hero surface — used sparingly (dashboard summary, profile header, onboarding). */
@@ -90,7 +95,7 @@ export function Screen({ children, scroll = true, pad = true, bottomInset = true
     ? <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false} refreshControl={refreshControl} contentContainerStyle={[inner, contentStyle]}><View style={col}>{children}</View></ScrollView>
     : <View style={[{ flex: 1 }, inner, contentStyle]}><View style={[col, { flex: 1 }]}>{children}</View></View>;
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={keyboard && Platform.OS === 'ios' ? 'padding' : undefined} enabled={keyboard}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior="padding" enabled={keyboard}>
       <View style={{ flex: 1 }}>{body}</View>
       {stickyFooter}
     </KeyboardAvoidingView>
@@ -104,6 +109,7 @@ export function Header({ title, subtitle, back, right, large = true, modal }: { 
   const router = useRouter();
   return (
     <View style={{ paddingTop: insets.top + space.sm, paddingHorizontal: space.lg, paddingBottom: space.md, backgroundColor: c.bg }}>
+      <View style={{ width: '100%', maxWidth: MAX_CONTENT, alignSelf: 'center' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: MIN_TOUCH, gap: space.sm }}>
          {back ? <IconButton icon={modal ? 'close' : 'chevron-back'} label={modal ? 'Close' : 'Back'} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={{ marginLeft: -space.sm }} /> : null}
         <View style={{ flex: 1 }}>
@@ -117,6 +123,7 @@ export function Header({ title, subtitle, back, right, large = true, modal }: { 
           {subtitle ? <T v="body" color={c.textMuted} style={{ marginTop: 2 }}>{subtitle}</T> : null}
         </View>
       ) : subtitle ? <T v="caption" color={c.textMuted}>{subtitle}</T> : null}
+      </View>
     </View>
   );
 }
@@ -161,6 +168,18 @@ export function IconButton({ icon, onPress, label, tone = 'plain', style, size =
       <Ionicons name={icon} size={size} color={fg} />
       {badge ? <View style={{ position: 'absolute', top: 6, right: 6, minWidth: 16, height: 16, paddingHorizontal: 4, borderRadius: 8, backgroundColor: c.danger, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: fontFamily.bold }}>{badge > 9 ? '9+' : badge}</Text></View> : null}
     </Pressy>
+  );
+}
+
+/** Compact − / value / + control (replaces two loose text buttons that cramped list rows). */
+export function Stepper({ value, onChange, min, max, label }: { value: number; onChange: (v: number) => void; min: number; max: number; label: string }) {
+  const { c } = useTheme();
+  return (
+    <View accessibilityRole="adjustable" accessibilityLabel={label} accessibilityValue={{ min, max, now: value }} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: c.surfaceAlt, borderRadius: radius.pill }}>
+      <IconButton icon="remove" label={`Decrease ${label}`} size={iconSize.md} onPress={() => onChange(Math.max(min, value - 1))} />
+      <T v="bodyStrong" align="center" style={{ minWidth: 28, fontVariant: ['tabular-nums'] }}>{value}</T>
+      <IconButton icon="add" label={`Increase ${label}`} size={iconSize.md} onPress={() => onChange(Math.min(max, value + 1))} />
+    </View>
   );
 }
 
@@ -308,14 +327,15 @@ export function Row({ icon, iconColor, title, subtitle, right, onPress, onLongPr
   icon?: IconName; iconColor?: string; title: string; subtitle?: string; right?: React.ReactNode; onPress?: () => void; onLongPress?: () => void; chevron?: boolean; danger?: boolean; last?: boolean; leading?: React.ReactNode;
 }) {
   const { c } = useTheme();
+  const inset = React.useContext(RowInsetContext);
   const content = (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 60, paddingVertical: space.sm }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 60, paddingVertical: space.sm, paddingHorizontal: inset ? space.lg : 0 }}>
       {leading ?? (icon ? <IconTile icon={icon} color={danger ? c.danger : iconColor ?? c.primary} /> : null)}
-      <View style={{ flex: 1 }}>
-        <T v="bodyStrong" color={danger ? c.danger : c.text} numberOfLines={1}>{title}</T>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <T v="bodyStrong" color={danger ? c.danger : c.text} numberOfLines={2}>{title}</T>
         {subtitle ? <T v="caption" color={c.textMuted} numberOfLines={2} style={{ marginTop: 1 }}>{subtitle}</T> : null}
       </View>
-      {right ? <View style={{ justifyContent: 'center' }}>{right}</View> : null}
+      {right ? <View style={{ justifyContent: 'center', flexShrink: 0 }}>{right}</View> : null}
       {chevron ? <Ionicons name="chevron-forward" size={18} color={c.textFaint} /> : null}
     </View>
   );
