@@ -11,7 +11,7 @@ import { getDeviceId } from '../license/deviceId';
 import { useLicense } from '../license/LicenseGate';
 import { APP_NAME } from '../lib/brand';
 import { space } from '../lib/theme';
-import { Button, Card, Credit, Field, Header, Row, Screen, SectionHeader, Segmented, T, ToggleRow } from '../ui/kit';
+import { Button, Card, Credit, Field, Header, Row, Screen, SectionHeader, Segmented, Stepper, T, ToggleRow } from '../ui/kit';
 import { OptionSheet, Sheet } from '../ui/Sheet';
 import { haptic } from '../lib/haptics';
 
@@ -62,11 +62,7 @@ export default function Settings() {
             }} />
           </View>
           <Row icon="time" iconColor={c.warning} title="Reminder time" subtitle={hourLabel(settings.reminderHour)} chevron onPress={() => setHourOpen(true)} />
-          <Row icon="calendar" iconColor={c.primary} title="Default follow-up" subtitle={`${settings.defaultFollowUpDays} day${settings.defaultFollowUpDays === 1 ? '' : 's'} after today`} right={
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <Button size="sm" variant="soft" label="−" onPress={() => patch({ defaultFollowUpDays: Math.max(1, settings.defaultFollowUpDays - 1) })} />
-              <Button size="sm" variant="soft" label="+" onPress={() => patch({ defaultFollowUpDays: Math.min(60, settings.defaultFollowUpDays + 1) })} />
-            </View>} last />
+          <Row icon="calendar" iconColor={c.primary} title="Default follow-up" subtitle={`${settings.defaultFollowUpDays} day${settings.defaultFollowUpDays === 1 ? '' : 's'} after today`} right={<Stepper label="follow-up days" min={1} max={60} value={settings.defaultFollowUpDays} onChange={(d) => patch({ defaultFollowUpDays: d })} />} last />
         </Card>
 
         <SectionHeader title="Security" />
