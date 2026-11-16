@@ -77,7 +77,7 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
           </Animated.View>
           <T v="label" color="#FFB3AF" align="center" style={{ minHeight: 40, marginTop: space.lg, paddingHorizontal: space.xl }} accessibilityRole="text">{wait > 0 ? `Too many attempts. Try again in ${wait}s.` : msg}</T>
         </View>
-        <View style={{ width: 300, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 }}>
+        <View style={{ width: '100%', maxWidth: 300, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 }}>
           {KEYS.map((k) => (
             <Pressable key={k} onPress={() => press(k)} accessibilityRole="button" accessibilityLabel={k === 'back' ? 'Delete' : k === 'bio' ? 'Use biometrics' : k} disabled={k === 'bio' && !bio}
               style={({ pressed }) => ({ width: 84, height: 70, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center', backgroundColor: k === 'bio' && !bio ? 'transparent' : pressed ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.12)' })}>

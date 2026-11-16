@@ -10,7 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../ctx/ThemeContext';
-import { avatarColor, elevation, fontFamily, iconSize, MIN_TOUCH, radius, space, type, TypeKey } from '../lib/theme';
+import { avatarColor, elevation, fontFamily, iconSize, MAX_CONTENT, MIN_TOUCH, radius, space, type, TypeKey } from '../lib/theme';
 import { haptic } from '../lib/haptics';
 import { Fmt } from '../lib/format';
 import { CREDIT } from '../lib/brand';
@@ -19,12 +19,12 @@ export type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
 // ───────────────────────── Text ─────────────────────────
 export function T({ v = 'body', color, children, style, align, numberOfLines, ...rest }: {
-  v?: TypeKey; color?: string; children?: React.ReactNode; style?: StyleProp<TextStyle>; align?: TextStyle['textAlign']; numberOfLines?: number; selectable?: boolean; accessibilityRole?: 'header' | 'text';
+  v?: TypeKey; color?: string; children?: React.ReactNode; style?: StyleProp<TextStyle>; align?: TextStyle['textAlign']; numberOfLines?: number; selectable?: boolean; accessibilityRole?: 'header' | 'text'; maxFontSizeMultiplier?: number;
 }) {
   const { c } = useTheme();
   const s = type[v];
   return (
-    <Text numberOfLines={numberOfLines} {...rest}
+    <Text numberOfLines={numberOfLines} maxFontSizeMultiplier={1.3} {...rest}
       style={[{ fontFamily: fontFamily[s.family], fontSize: s.fontSize, lineHeight: s.lineHeight, letterSpacing: s.tracking, color: color ?? c.text, textAlign: align }, v === 'overline' && { textTransform: 'uppercase' }, style]}>
       {children}
     </Text>
@@ -32,27 +32,24 @@ export function T({ v = 'body', color, children, style, align, numberOfLines, ..
 }
 
 // ───────────────────────── Pressable with spring feedback ─────────────────────────
-const LAYOUT_KEYS = /^(flex|flexGrow|flexShrink|flexBasis|alignSelf|width|height|minWidth|minHeight|maxWidth|maxHeight|margin.*|position|top|left|right|bottom|zIndex)$/;
+// One animated Pressable carries the WHOLE style (size, padding, background, border), so nothing is lost.
+const APressable = Animated.createAnimatedComponent(Pressable);
 export function Pressy({ children, onPress, onLongPress, style, disabled, scale = 0.97, haptics = 'tap', hitSlop, accessibilityLabel, accessibilityRole = 'button', accessibilityState, testID }: {
   children: React.ReactNode; onPress?: () => void; onLongPress?: () => void; style?: StyleProp<ViewStyle>; disabled?: boolean; scale?: number;
   haptics?: 'tap' | 'light' | 'medium' | 'none'; hitSlop?: number; accessibilityLabel?: string; accessibilityRole?: 'button' | 'link' | 'tab' | 'checkbox' | 'switch' | 'radio'; accessibilityState?: { selected?: boolean; checked?: boolean; disabled?: boolean }; testID?: string;
 }) {
   const s = useRef(new Animated.Value(1)).current;
   const to = (v: number) => Animated.spring(s, { toValue: v, speed: 40, bounciness: 4, useNativeDriver: true }).start();
-  // Layout props belong on the outer Pressable so flex rows/absolute positioning work; visuals stay on the animated inner view.
-  const flat = (StyleSheet.flatten(style) || {}) as Record<string, any>;
-  const outer: Record<string, any> = {}; const inner: Record<string, any> = {};
-  for (const k of Object.keys(flat)) (LAYOUT_KEYS.test(k) ? outer : inner)[k] = flat[k];
-  if (outer.flex != null || outer.flexGrow != null) inner.flex = 1;
   return (
-    <Pressable style={outer}
+    <APressable
       testID={testID} disabled={disabled} hitSlop={hitSlop}
       accessibilityRole={accessibilityRole} accessibilityLabel={accessibilityLabel} accessibilityState={{ disabled, ...accessibilityState }}
       onPressIn={() => to(scale)} onPressOut={() => to(1)}
       onPress={() => { if (haptics !== 'none') haptic[haptics](); onPress?.(); }}
-      onLongPress={onLongPress ? () => { haptic.medium(); onLongPress(); } : undefined}>
-      <Animated.View style={[{ transform: [{ scale: s }], opacity: disabled ? 0.5 : 1 }, inner]}>{children}</Animated.View>
-    </Pressable>
+      onLongPress={onLongPress ? () => { haptic.medium(); onLongPress(); } : undefined}
+      style={[style, { transform: [{ scale: s }], opacity: disabled ? 0.5 : 1 }] as any}>
+      {children}
+    </APressable>
   );
 }
 
@@ -88,9 +85,10 @@ export function Screen({ children, scroll = true, pad = true, bottomInset = true
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const inner: ViewStyle = { paddingHorizontal: pad ? space.lg : 0, paddingBottom: bottomInset ? insets.bottom + space.lg : 0 };
+  const col: ViewStyle = { width: '100%', maxWidth: MAX_CONTENT, alignSelf: 'center' };
   const body = scroll
-    ? <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false} refreshControl={refreshControl} contentContainerStyle={[inner, contentStyle]}>{children}</ScrollView>
-    : <View style={[{ flex: 1 }, inner, contentStyle]}>{children}</View>;
+    ? <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false} refreshControl={refreshControl} contentContainerStyle={[inner, contentStyle]}><View style={col}>{children}</View></ScrollView>
+    : <View style={[{ flex: 1 }, inner, contentStyle]}><View style={[col, { flex: 1 }]}>{children}</View></View>;
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={keyboard && Platform.OS === 'ios' ? 'padding' : undefined} enabled={keyboard}>
       <View style={{ flex: 1 }}>{body}</View>
@@ -144,12 +142,12 @@ export function Button({ label, onPress, icon, variant = 'primary', size = 'md',
     danger: { bg: c.dangerSoft, fg: c.onDangerSoft }, outline: { bg: 'transparent', fg: c.text, border: c.borderStrong },
   };
   const m = map[variant];
-  const h = size === 'sm' ? MIN_TOUCH : 52;
+  const h = size === 'sm' ? MIN_TOUCH : 52; const padV = size === 'sm' ? space.sm : space.md;
   return (
     <Pressy onPress={onPress} disabled={disabled || loading} haptics="light" accessibilityLabel={label}
-      style={[{ minHeight: h, borderRadius: radius.md, paddingHorizontal: size === 'sm' ? space.lg : space.xl, backgroundColor: m.bg, borderWidth: m.border ? 1 : 0, borderColor: m.border, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: space.sm, alignSelf: block ? 'stretch' : 'flex-start' }, block && { flex: 1 }, style]}>
+      style={[{ minHeight: h, borderRadius: radius.md, paddingHorizontal: size === 'sm' ? space.lg : space.xl, paddingVertical: padV, backgroundColor: m.bg, borderWidth: m.border ? 1 : 0, borderColor: m.border, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: space.sm, alignSelf: block ? 'stretch' : 'flex-start' }, block && { flexGrow: 1, flexShrink: 1 }, style]}>
       {loading ? <ActivityIndicator color={m.fg} /> : icon ? <Ionicons name={icon} size={iconSize.md} color={m.fg} /> : null}
-      <T v="bodyStrong" color={m.fg}>{label}</T>
+      <T v="bodyStrong" color={m.fg} align="center" style={{ flexShrink: 1 }}>{label}</T>
     </Pressy>
   );
 }

@@ -31,7 +31,7 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   }, []);
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: space.md, paddingBottom: Math.max(insets.bottom, 10) }}>
-      <View style={[{ flexDirection: 'row', backgroundColor: c.surfaceRaised, borderRadius: radius.xl, padding: 6, borderWidth: 1, borderColor: c.border }, elevation.high]} accessibilityRole="tablist">
+      <View style={[{ width: '100%', maxWidth: 560, alignSelf: 'center', flexDirection: 'row', backgroundColor: c.surfaceRaised, borderRadius: radius.xl, padding: 6, borderWidth: 1, borderColor: c.border }, elevation.high]} accessibilityRole="tablist">
         {state.routes.map((route, i) => {
           const m = META[route.name]; if (!m) return null;
           const focused = state.index === i;
