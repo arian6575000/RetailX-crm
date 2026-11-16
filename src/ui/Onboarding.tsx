@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Animated, FlatList, useWindowDimensions, View } from 'react-native';
+import { Animated, FlatList, KeyboardAvoidingView, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../ctx/AppContext';
@@ -66,7 +66,7 @@ export function Onboarding() {
 
   const data: (Page | { key: 'setup' })[] = [...PAGES, { key: 'setup' }];
   return (
-    <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top, paddingBottom: insets.bottom + space.md }}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top, paddingBottom: insets.bottom + space.md }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.lg, minHeight: 52 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><Logo size={30} /><T v="heading">RetailX CRM</T></View>
         {!last ? <Pressy onPress={() => go(total - 1)} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 }} accessibilityLabel="Skip introduction"><T v="label" color={c.textMuted}>Skip</T></Pressy> : null}
@@ -103,6 +103,6 @@ export function Onboarding() {
         </View>
         <Button block label={last ? 'Start using RetailX CRM' : 'Continue'} icon={last ? 'rocket' : 'arrow-forward'} onPress={last ? finish : () => go(idx + 1)} />
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
